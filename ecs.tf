@@ -7,20 +7,9 @@ module "private_subnet" {
 
   name               = "${var.environment}_private_subnet_rds"
   environment        = "${var.environment}"
-  vpc_id             = "${data.aws_vpc.certified.vpc_id}"
-  cidrs              = "${var.private_subnet_cidrs}"
+  vpc_id             = "${module.ecs.vpcid}"
+  cidrs              = "${var.rds_subnet_cidrs}"
   availability_zones = "${var.availability_zones}"
-}
-data "aws_vpc" "certified" {
-  
-  cidr_block = "${var.vpc_cidr}"
-
-}
-
-data "aws_subnet_ids" "certified" {
-  
-  vpc_id = "${data.aws_vpc.certified.vpc_id}"
-
 }
 
 module "ecs" {
@@ -28,7 +17,7 @@ module "ecs" {
 
   environment          = "${var.environment}"
   cluster              = "${var.environment}"
-  cloudwatch_prefix    = "${var.environment}"           #See ecs_instances module when to set this and when not!
+  cloudwatch_prefix    = "${var.environment}" #See ecs_instances module when to set this and when not!
   vpc_cidr             = "${var.vpc_cidr}"
   public_subnet_cidrs  = "${var.public_subnet_cidrs}"
   private_subnet_cidrs = "${var.private_subnet_cidrs}"
@@ -49,7 +38,7 @@ module "rds" {
   database_username = "${var.database_username}"
   database_password = "${var.database_password}"
   subnet_ids        = ["${module.private_subnet.ids}"]
-  vpc_id            = "${data.aws_vpc.certified.vpc_id}"
+  vpc_id            = "${module.ecs.vpcid}"
   instance_class    = "db.t2.micro"
 }
 
@@ -73,6 +62,10 @@ variable "database_username" {}
 variable "database_password" {}
 
 variable "private_subnet_cidrs" {
+  type = "list"
+}
+
+variable "rds_subnet_cidrs" {
   type = "list"
 }
 
